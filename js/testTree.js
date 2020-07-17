@@ -26,18 +26,20 @@ assert(counts['C'] == 3);
 assert(gini(['A', 'B', 'A', 'B']) == 0.5);
 assert(gini(['A', 'A', 'A']) == 0);
 
-dataset = {'Taste':['Salty','Spicy','Spicy','Spicy','Spicy','Sweet','Salty','Sweet','Spicy','Salty'],
-       'Temperature':['Hot','Hot','Hot','Cold','Hot','Cold','Cold','Hot','Cold','Hot'],
-       'Texture':['Soft','Soft','Hard','Hard','Hard','Soft','Soft','Soft','Soft','Hard'],
-       'Eat':[false, false, true, false, true, true, false, true, true, true]}
+// dataset = {'Taste':['Salty','Spicy','Spicy','Spicy','Spicy','Sweet','Salty','Sweet','Spicy','Salty'],
+//        'Temperature':['Hot','Hot','Hot','Cold','Hot','Cold','Cold','Hot','Cold','Hot'],
+//        'Texture':['Soft','Soft','Hard','Hard','Hard','Soft','Soft','Soft','Soft','Hard'],
+//        'Eat':[false, false, true, false, true, true, false, true, true, true]}
 
 features = [['Salty','Spicy','Spicy','Spicy','Spicy','Sweet','Salty','Sweet','Spicy','Salty'],
             ['Hot','Hot','Hot','Cold','Hot','Cold','Cold','Hot','Cold','Hot'],
             ['Soft','Soft','Hard','Hard','Hard','Soft','Soft','Soft','Soft','Hard'],
-            [false, false, true, false, true, true, false, true, true, true]]
-labels = ['Taste', 'Temperature', 'Texture', 'Eat']
+            [false, false, true, false, true, true, false, true, true, true]];
+labels = ['Taste', 'Temperature', 'Texture', 'Eat'];
 
 var root = fit(features, labels);
+
+
 console.log(root);
 /* Test Node */
 const X = new DataFrame({
