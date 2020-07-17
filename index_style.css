@@ -1,0 +1,16 @@
+#heading {
+    display: flex;
+    justify-content: center;
+}
+
+#inputstuff {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+#myDiagramDiv {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}

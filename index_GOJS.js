@@ -13,13 +13,14 @@
     // the template we defined earlier
     myDiagram.nodeTemplate =
     $(go.Node, "Horizontal",
-        { background: "#44CCFF" },
-        $(go.Picture,
-        { margin: 10, width: 50, height: 50, background: "red" },
-        new go.Binding("source")),
-        $(go.TextBlock, "Default Text",
-        { margin: 12, stroke: "white", font: "bold 16px sans-serif" },
-        new go.Binding("text", "name"))
+        { background: "lightgrey" },
+        $(go.TextBlock, "Option 1",
+        { margin: 12, stroke: "blue", font: "16px sans-serif" },
+        new go.Binding("text", "option1")),
+        $(go.TextBlock, "Option 2",
+        { margin: 12, stroke: "red", font: "16px sans-serif" },
+        new go.Binding("text", "option2")),
+        
     );
 
     // define a Link template that routes orthogonally, with no arrowhead
@@ -32,14 +33,18 @@
     var model = $(go.TreeModel);
     model.nodeDataArray =
     [
-    { key: "1",              name: "Don Meow",   source: "cat1.png" },
-    { key: "2", parent: "1", name: "Demeter",    source: "cat2.png" },
-    { key: "3", parent: "1", name: "Copricat",   source: "cat3.png" },
-    { key: "4", parent: "3", name: "Jellylorum", source: "cat4.png" },
-    { key: "5", parent: "3", name: "Alonzo",     source: "cat5.png" },
-    { key: "6", parent: "2", name: "Munkustrap", source: "cat6.png" }
+    { key: "1",              option1: "Q 1",   option2: "Q 2" },
+    { key: "2", parent: "1", option1: "Q 3",   option2: "Q 4" },
+    { key: "3", parent: "1", option1: "Q 3.1",   option2: "Q 4.1" },
+    { key: "4", parent: "3", option1: "Q 5",   option2: "Q 6" },
+    { key: "5", parent: "3", option1: "Q 7",   option2: "Q 8" },
+    { key: "6", parent: "2", option1: "Q 3.2",   option2: "Q 4.2" }
     ];
     myDiagram.model = model;
 
 })()
     
+
+
+
+
