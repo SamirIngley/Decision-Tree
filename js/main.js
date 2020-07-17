@@ -1,6 +1,38 @@
 const DataFrame = dfjs.DataFrame;
-var treemap = d3.treemap();
-
+var treeRoot = d3.hierarchy({
+  "name": "Eve",
+  "children": [
+    {
+      "name": "Cain"
+    },
+    {
+      "name": "Seth",
+      "children": [
+        {
+          "name": "Enos"
+        },
+        {
+          "name": "Noam"
+        }
+      ]
+    },
+    {
+      "name": "Abel"
+    },
+    {
+      "name": "Awan",
+      "children": [
+        {
+          "name": "Enoch"
+        }
+      ]
+    },
+    {
+      "name": "Azura"
+    }
+  ]
+});
+var treemap = d3.treemap(treeRoot);
 dataset = {'Taste':['Salty','Spicy','Spicy','Spicy','Spicy','Sweet','Salty','Sweet','Spicy','Salty'],
        'Temperature':['Hot','Hot','Hot','Cold','Hot','Cold','Cold','Hot','Cold','Hot'],
        'Texture':['Soft','Soft','Hard','Hard','Hard','Soft','Soft','Soft','Soft','Hard'],
@@ -61,25 +93,66 @@ function bestSplit(df, targetClass) {
 }
 
 function fit(df, targetClass) {
-    const node = bestSplit(df, targetClass);
-    const values = df.unique(node).toArray(node);
-    var tree = {};
-    tree[node] = {};
 
-    values.forEach((value) => {
-        var subDf = df.filter(row => row.get(node) == value);
-        var unique = subDf.unique(targetClass);
+    function _fit(df) {
+        const node = bestSplit(df, targetClass);
+        const values = df.unique(node).toArray(node);
+        var tree = {};
+        tree[node] = {};
 
-        if (tree[node] == undefined){
-            console.log(tree);
-        }
+        values.forEach((value) => {
+            var subDf = df.filter(row => row.get(node) == value);
+            var unique = subDf.unique(targetClass);
 
-        if (unique.count() == 1)
-            tree[node][value] = unique.toArray(targetClass)[0];
-        else
-            tree[node][value] = fit(subDf, targetClass);
-    });
+            if (unique.count() == 1) {
+                tree[node][value] = unique.toArray(targetClass)[0];
+            } else {
+                tree[node][value] = fit(subDf, targetClass);
+            }
+        });
+        return tree;
+    }
+    const tree = _fit(df);
     return tree;
+}
+
+function formatTree(tree) {
+    var id = 0;
+    var stack = [[tree, undefined]];
+    var layout = [];
+    var nodeToId = {};
+    while (stack.length > 0) {
+        var [node, parent] = stack.pop();
+
+        if (node != undefined)
+            if (typeof node === 'object') {
+                for (const key in node)
+                    if (node.hasOwnProperty(key)) {
+                        if (!nodeToId.hasOwnProperty(node)) {
+                            nodeToId[node] = id;
+                            id += 1;
+                        }
+                        if (parent == undefined)
+                            layout.push({key: key+id, option1: key, option2:''});
+                        else
+                            layout.push({key: key+id, parent: parent, option1: key, option2:''});
+                        stack.push([node[key], key+id]);
+                    }
+            } else {
+                if (!nodeToId.hasOwnProperty(node)) {
+                    nodeToId[node] = id;
+                    id += 1;
+                }
+                if (parent == undefined)
+                    layout.push({key: node+id, option1: '', option2:node});
+                else {
+                    layout.push({key: node+id, parent: parent, option1: '', option2:node});
+                    console.log(node);
+                }
+            }
+        id += 1;
+    }
+    return layout;
 }
 
 const tree = {'Taste': {'Salty': {'Texture': {'Hard': 'Yes', 'Soft': 'No'}},
