@@ -6,7 +6,22 @@
     <script src="./jquery.min.js"></script>
     <script src="./release/go.js"></script>
     <link rel="stylesheet" href="index_style.css">
+    <style>
+    div{
+      display:inline-block;
+      position:relative;
+    }
 
+    button{
+      position:absolute;
+      bottom:10px;
+      right:10px;
+    }
+
+    textarea{
+      display:block;
+    }
+    </style>
 </head>
 
 <body>
@@ -17,7 +32,10 @@
     <br>
 
     <div id="inputstuff">
-        <textarea name="filetext" id="filetext" cols="30" rows="10"></textarea>
+        <div>
+          <textarea id="dataInput" name="dataInput" id="txt" cols="20" rows="5"></textarea>
+          <button onclick="makeVisualization()">Submit</button>
+        </div>
         <input type="file" id="file" name="file">
     </div>
 
@@ -31,6 +49,7 @@
     <p>graph library: https://gojs.net/latest/learn/</p>
 <script src="https://gmousse.github.io/dataframe-js/dist/dataframe.min.js"></script>
 <script src="https://d3js.org/d3-hierarchy.v1.min.js"></script>
+<script src="js/data.js"></script>
 <script src="js/main.js"></script>
 <script src="index_GOJS.js"></script>
 </body>
