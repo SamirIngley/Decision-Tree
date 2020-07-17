@@ -1,173 +1,88 @@
-
-entropy = (nums) => nums.reduce((total, num) => total - num*Math.log2(num));
-
-/* Big Thanks to https://tinyurl.com/yafxtms8 for a detailed Decision Tree
- * Classifier walk-through which heavily influenced this project.
- */
-
-class Question {
-
-    constructor(column, value) {
-        this.column = column;
-        this.value = value;
-    }
-
-    check(data) {
-        return data[this.column] > this.value;
-    }
-}
-
-class Node {
-
-    constructor(question, trueBranch, falseBranch) {
-        this.question = question;
-        this.trueBranch = trueBranch;
-        this.falseBranch = falseBranch;
-    }
-}
-
-class Leaf {
-
-    constructor(rows) {
-        this.predictions = hist(rows);
-    }
-}
-
-function partition(rows, question) {
-    var trueRows = [];
-    var falseRows = [];
-
-    rows.forEach((row) => {
-        if (question.check(row))
-            trueRows.push(row);
-        else
-            falseRows.push(row);
-    });
-    return [trueRows, falseRows];
-}
-
-function hist(arr) {
-    counts = {};
-
-    for (var i = 0; i < arr.length; i++)
-        if (arr[i] in counts)
-            counts[arr[i]]++;
-        else
-            counts[arr[i]] = 1;
-    return counts;
-}
-
-function gini(rows) {
-    /*
-    information gain:
-    gain(D, A) = entropy(D)- SUM ( |Di| / |D| * entropy(Di) )
-    */
-    const counts = hist(rows);
-    const N = rows.length;
-    var impurity = 1;
-
-    Object.keys(counts).forEach((label) => {
-        label_prob = counts[label] / N;
-        impurity -= label_prob**2;
-    });
-    return impurity;
-}
-
-function infoGain(left, right, curUncertainty) {
-    p = left.length / (left.length + right.length);
-    return curUncertainty - p * gini(left) - (1 - p) * gini(right);
-}
-
-function bestSplit(rows) {
-    var bestQuestion;
-    var bestGain = 0;
-    var curUncertainty = gini(rows);
-    const featuresCount = rows[0].length - 1;
-
-    for (var col = 0; col < featuresCount; col++) {
-        const values = new Set(rows.map((row) => row[col]));
-
-        values.forEach((val) => {
-            const question = new Question(col, val);
-            const [trueRows, falseRows] = partition(rows, question);
-
-            if (trueRows.length != 0 && falseRows.length != 0) {
-                const gain = infoGain(trueRows, falseRows, curUncertainty);
-
-                if (gain > bestGain) {
-                    bestGain = gain;
-                    bestQuestion = question;
-                }
-            }
-        });
-    }
-    return [bestGain, bestQuestion];
-}
-
-function fit(features, labels) {
-    var data = features + labels;
-    var [gain, question] = bestSplit(data);
-
-    if (gain == 0)
-        return new Leaf(data);
-    var trueRows, falseRows = partition(data, question);
-    trueBranch = fit(trueRows, labels);
-    falseBranch = fit(falseRows, labels);
-    return new Node(question, trueBranch, falseBranch);
-}
-
-
 const DataFrame = dfjs.DataFrame;
-/*
-class Node {
-    constructor(X, y, indices, minLeaf=5) {
-        this.X = X;
-        this.y = y;
-        this.indices = indices;
-        this.minLeaf = minLeaf;
-        this.rows = X.length;
-        this.cols = X.listColumns().length;
-        this.val = 0;
+var treemap = d3.treemap();
 
-        for (var i = 0; i < indices.length; i++)
-            this.val += y.select(indices[i]);
-        this.val /= y.length;
-        this.score = Infinity;
-        this.findBestSplit()
-    }
+dataset = {'Taste':['Salty','Spicy','Spicy','Spicy','Spicy','Sweet','Salty','Sweet','Spicy','Salty'],
+       'Temperature':['Hot','Hot','Hot','Cold','Hot','Cold','Cold','Hot','Cold','Hot'],
+       'Texture':['Soft','Soft','Hard','Hard','Hard','Soft','Soft','Soft','Soft','Hard'],
+       'Eat':['No','No','Yes','No','Yes','Yes','No','Yes','Yes','Yes']};
 
-    findBestSplit() {
-        for (var c = 0; c < this.cols; c++)
-            this.findBetterSplit(c);
-        if (this.isLeaf())
-            return;
-        var x = this.splitCol();
-    }
+const df = new DataFrame(dataset, ['Taste','Temperature','Texture','Eat']);
 
-    isLeaf() {
-        return this.score == Infinity;
-    }
+function entropy(df, targetClass) {
+    var entropy = 0;
+    const values = df.unique(targetClass).toArray(targetClass);
 
-    splitCol() {
-
-    }
-
-
+    values.forEach((value) => {
+        const fraction = df.countValue(value, targetClass) / df.count();
+        entropy += -fraction*Math.log2(fraction);
+    });
+    return entropy;
 }
 
-class DecisionTree {
+function attributeEntropy(df, attribute, targetClass) {
+    const targetVariables = df.unique(targetClass).toArray(targetClass);
+    const variables = df.unique(attribute).toArray(attribute);
+    var entropy = 0;
 
-    fit(X, y, minLeaf=5) {
-        var indices = [];
+    variables.forEach((variable) => {
+        const denom = df
+                        .filter(row => row.get(attribute) == variable)
+                        .count();
+        const fraction = denom / df.count();
+        var _entropy = 0;
 
-        for (var i = 0; i < y.length; i++)
-            indices.push(i);
-        this.tree = Node(X, y, indices, minLeaf);
-        return this;
-    }
-
-    predict(X) {
-        return this.tree.predict(X);
-    }
+        targetVariables.forEach((targetVariable) => {
+            const num = df
+                        .filter(row => row.get(attribute) == variable)
+                        .filter(row => row.get(targetClass) == targetVariable)
+                        .count();
+            const _fraction = num / (denom + Number.EPSILON);
+            _entropy += -_fraction * Math.log(_fraction + Number.EPSILON);
+        });
+        entropy += -fraction*_entropy;
+    });
+    return Math.abs(entropy);
 }
-*/
+
+function bestSplit(df, targetClass) {
+    const totalEntropy = entropy(df, targetClass);
+    var best = [-Infinity, undefined];
+
+    df.listColumns().forEach((column) => {
+
+        if (column != targetClass) {
+            const cur = totalEntropy - attributeEntropy(df, column, targetClass);
+
+            if (cur > best[0])
+                best = [cur, column];
+        }
+    });
+    return best[1];
+}
+
+function fit(df, targetClass) {
+    const node = bestSplit(df, targetClass);
+    const values = df.unique(node).toArray(node);
+    var tree = {};
+    tree[node] = {};
+
+    values.forEach((value) => {
+        var subDf = df.filter(row => row.get(node) == value);
+        var unique = subDf.unique(targetClass);
+
+        if (tree[node] == undefined){
+            console.log(tree);
+        }
+
+        if (unique.count() == 1)
+            tree[node][value] = unique.toArray(targetClass)[0];
+        else
+            tree[node][value] = fit(subDf, targetClass);
+    });
+    return tree;
+}
+
+const tree = {'Taste': {'Salty': {'Texture': {'Hard': 'Yes', 'Soft': 'No'}},
+  'Spicy': {'Temperature': {'Cold': {'Texture': {'Hard': 'No', 'Soft': 'Yes'}},
+    'Hot': {'Texture': {'Hard': 'Yes', 'Soft': 'No'}}}},
+  'Sweet': 'Yes'}};
